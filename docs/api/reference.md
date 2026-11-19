@@ -236,7 +236,7 @@ type ModuleLinks = { defines: string[]; needs: string[] };
 function moduleLinks(code: string, filename: string, parser?: Parser): ModuleLinks;
 ```
 
-Scans one file on its own. `defines` lists the bundler module ids the file registers (webpack 4/5 factories, Turbopack modules). `needs` lists the module ids it loads (`require(id)`, `import()`, `ctx.i/r/A(id)`, and a Turbopack loader's target), including ids that another file defines. It parses and flattens the file, and the graph rows are dropped once the ids are read.
+Scans one file on its own. `defines` lists the bundler module ids the file registers (webpack 4/5 factories, Turbopack modules), plus the file's own name if it has ES `import`/`export` syntax. `needs` lists the module ids it loads (`require(id)`, `import()`, `ctx.i/r/A(id)`, and a Turbopack loader's target), and the files its ES imports resolve to, including ids that another file defines. It parses and flattens the file, and the graph rows are dropped once the ids are read.
 
 ## `planUnits()`
 
@@ -244,7 +244,7 @@ Scans one file on its own. `defines` lists the bundler module ids the file regis
 function planUnits(links: Map<string, ModuleLinks>): string[][];
 ```
 
-Splits files into units that can each be loaded as their own graph. A unit is a file plus, transitively, every file that defines a module it needs. A unit contained in another one is dropped. Every file is still in a unit together with everything it loads, so value paths through the module registry stay whole. Files with no registry, such as plain ES modules (which aren't linked anyway), are one unit each. See [Memory](memory.md#one-graph-per-unit) for what this costs and what it misses.
+Splits files into units that can each be loaded as their own graph. A unit is a file plus, transitively, every file that defines a module it needs. A unit contained in another one is dropped. Every file is still in a unit together with everything it loads, so value paths through the module registry stay whole. Files that neither define nor load a module are one unit each. See [Memory](memory.md#one-graph-per-unit) for what this costs and what it misses.
 
 ```ts
 const links = new Map(files.map((f) => [f.filename, moduleLinks(f.code, f.filename)]));
