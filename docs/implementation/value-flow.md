@@ -80,7 +80,7 @@ None of these create `FLOWS_TO` yet. They're `READS`/`WRITES` only, or nothing.
 | Destructuring | `const { a } = o`, `[a] = arr` | It's a property or element read, like `obj.foo`. `a` is written, but nothing flows into it. | property pass |
 | for-of / for-in | `for (x of xs)` | Elements and keys are element reads. `x` is written, with no flow. | property pass |
 | Object and array literals | `[x]`, `{ k: x }` | Aggregate contents need heap modelling. | property pass |
-| `await`, `yield`, Promises, callbacks | `await p` | Promise and callback semantics. | later |
+| `await`, `yield`, Promises, callbacks other than the array methods below | `await p` | Promise and callback semantics. | later |
 | Function values | `function f() {}` | The function isn't a `FLOWS_TO` value flowing into `f`. The call graph reads declarations directly. | |
 | Implicit flow | `if (secret) y = 1` | Control dependence. | `CONTROL_DEPENDS_ON` |
 
@@ -91,7 +91,16 @@ An unresolved call to one of these builtins carries its input into its result, a
 | Kind | Names | Input |
 | --- | --- | --- |
 | Global functions | `decodeURIComponent`, `decodeURI`, `unescape`, `String`, `Object` | the first argument |
-| String methods | `slice`, `substring`, `substr`, `trim`, `trimStart`, `trimEnd`, `toLowerCase`, `toUpperCase`, `padStart`, `padEnd`, `repeat`, `normalize`, `replace`, `replaceAll`, `toString`, `valueOf`, `at`, `concat` | the receiver (`x` in `x.slice(1)`), plus every argument for `concat` |
+| String methods | `slice`, `substring`, `substr`, `trim`, `trimStart`, `trimEnd`, `toLowerCase`, `toUpperCase`, `padStart`, `padEnd`, `repeat`, `normalize`, `replace`, `replaceAll`, `toString`, `valueOf`, `at`, `concat`, `split` | the receiver (`x` in `x.slice(1)`), plus every argument for `concat` |
+
+Array methods that take a callback, unresolved in the same way, carry the receiver into the callback's element parameter instead, as `FLOWS_TO receiver → param`. The callback can be an inline function or a name that resolves to one:
+
+| Methods | Parameter |
+| --- | --- |
+| `forEach`, `map`, `filter`, `flatMap`, `find`, `findIndex`, `findLast`, `findLastIndex`, `some`, `every` | the first (`v` in `x.forEach(function (v) {})`) |
+| `reduce`, `reduceRight` | the first two (the accumulator and the element) |
+
+So `location.search.split("&").forEach(function (v) { ... })` taints `v`. The initial value of `reduce` doesn't reach the accumulator, and `Array.from(x, cb)` isn't covered.
 
 A global function counts only when its name doesn't resolve to a local binding. Methods match by name alone, since the receiver's type isn't known, so `arr.slice(1)` also passes `arr` through. That over-approximation is acceptable for taint. Encoders (`encodeURIComponent`, `escape`) are deliberately absent: their output is safe in HTML, so they act as sanitizers. A call that resolves (`CALLS`) never gets these edges.
 
