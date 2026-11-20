@@ -97,7 +97,7 @@ A global function counts only when its name doesn't resolve to a local binding. 
 
 ## Coverage
 
-`src/flow.test.ts` checks the spec's value-flow cases by exact edge list:
+`test/flow.test.ts` checks the spec's value-flow cases by exact edge list:
 
 - `const y = x`, `x = y`, and `x = x + 1` with its cycle
 - compound and logical assignment, and update expressions

@@ -148,7 +148,7 @@ These are deliberate. Each needs either a later pass or control flow, which this
 
 ## Coverage
 
-`src/scopes.test.ts` holds a case table where each snippet maps every bound name to its scope chain, written innermost first, for example `function:ClassMethod < class:ClassDeclaration < global:Program`. It covers program, function, nested function, `var` and lexical, nested block, function expression, arrow, class, named class expression, catch, destructured catch, `for`, `for` with `var`, `switch` and static block cases. Further cases cover `for...of`/`for...in`, `var` escaping a catch, a block inside a static block, function declarations in blocks, object and private methods, anonymous classes, hoisting, TDZ, `using`, `await using` and export wrappers.
+`test/scopes.test.ts` holds a case table where each snippet maps every bound name to its scope chain, written innermost first, for example `function:ClassMethod < class:ClassDeclaration < global:Program`. It covers program, function, nested function, `var` and lexical, nested block, function expression, arrow, class, named class expression, catch, destructured catch, `for`, `for` with `var`, `switch` and static block cases. Further cases cover `for...of`/`for...in`, `var` escaping a catch, a block inside a static block, function declarations in blocks, object and private methods, anonymous classes, hoisting, TDZ, `using`, `await using` and export wrappers.
 
 Further tests check that:
 

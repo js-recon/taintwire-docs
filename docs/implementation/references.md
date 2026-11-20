@@ -152,7 +152,7 @@ RETURN op.type, u.line, u.col
 
 ## Coverage
 
-`src/flow.test.ts` covers all of this and [value flow](value-flow.md) in one suite. For references, reads and writes it has:
+`test/flow.test.ts` covers all of this and [value flow](value-flow.md) in one suite. For references, reads and writes it has:
 
 - Simple reads.
 - Shadowing and parent-scope resolution, checked by declaration offset.
