@@ -87,10 +87,15 @@ Rejects if `filename` is already in the graph. That check runs before any AST no
 ### `graph.addFiles()`
 
 ```ts
-addFiles(files: { code: string; filename: string }[]): Promise<string[]>;
+addFiles(
+    files: { code: string; filename: string }[],
+    onProgress?: (stage: "parse" | "link" | "load", done: number, total: number) => void
+): Promise<string[]>;
 ```
 
 Parses every file and loads them as one unit. Returns the `File` node ids, in the same order as `files`.
+
+`onProgress` reports each stage as it runs. `parse` counts files parsed (`total` is the number of files). `link` reports `0/1` before the walk that links the files and `1/1` after it. `load` counts the rows copied into the database.
 
 Names still resolve per file, as with `add()`. What `addFiles()` adds is the link between files that a bundler's runtime makes. For a webpack 4 or 5 or a Turbopack build, a call or value read through the module registry resolves to the function or value in the chunk that defines it, so value paths cross chunks. Classic (non-module) scripts are linked through the global scope they share on a page: a name that no scope of its own file binds resolves to another file's top-level `var`, `let`, `const` or `function` (the later file in the call's order wins, as in a browser; `window.x = …` properties aren't linked). Load every `.js` file of a build directory in one call. See [Bundler support](../bundlers/index.md).
 

@@ -163,7 +163,11 @@ Prepares every query against `graph` and returns the ones that don't compile, fo
 ### `runPgq()`
 
 ```ts
-runPgq(graph: PookieGraph, rules: PGRule[]): Promise<{ findings: PgqFinding[]; errors: { ruleId: string; message: string }[] }>;
+runPgq(
+    graph: PookieGraph,
+    rules: PGRule[],
+    onRule?: (done: number, rule: PGRule) => void
+): Promise<{ findings: PgqFinding[]; errors: { ruleId: string; message: string }[] }>;
 
 interface PgqFinding {
     ruleId: string;
@@ -179,6 +183,6 @@ interface PgqFinding {
 }
 ```
 
-Runs `rules` on `graph`. Each selector is evaluated once per call, however many rules use it. A rule that fails goes into `errors`, and the remaining rules still run. `graph.code(finding.id)` returns the finding's source text.
+Runs `rules` on `graph`. Each selector is evaluated once per call, however many rules use it. A rule that fails goes into `errors`, and the remaining rules still run. `onRule` is called after each rule, failed or not, with the number of rules done so far. `graph.code(finding.id)` returns the finding's source text.
 
 For a big graph, open the saved file read-only: `PookieGraph.open("app.pg", { readOnly: true })`.
