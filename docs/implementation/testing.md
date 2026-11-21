@@ -21,7 +21,7 @@ npm run build   # tsc into build/
 
 ## Suites
 
-### `src/index.test.ts`: the API and the graph shape
+### `test/index.test.ts`: the API and the graph shape
 
 - **AST graph**: a `File -> Program -> ExpressionStatement -> CallExpression` path exists, `props.callee.slug_ref` points at the real `SON` target, webpack module ids are found as `NumericLiteral` keys, and line numbers are correct.
 - **Persistence**: import to disk, reopen, `add()` a second file that reuses existing tables and pairs and adds new ones.
@@ -32,15 +32,15 @@ npm run build   # tsc into build/
 - **Type coverage**: over `modern.js` and `component.tsx`, more than 100 distinct node types, with every node of every type hashed.
 - **Parse errors**: a cs-mast parse error suggests `parser: "babel"`, and `babel` recovers from the same input.
 
-### `src/declares.test.ts`: `DECLARES`
+### `test/declares.test.ts`: `DECLARES`
 
 A table of 36 snippet and expected-edge pairs, plus invariants over the fixtures. See [DECLARES: Coverage](declares.md#coverage).
 
-### `src/scopes.test.ts`: scopes
+### `test/scopes.test.ts`: scopes
 
 A table of 29 snippets, each mapping every bound name to its scope chain, plus provenance, idempotency, parser-parity and persistence tests. See [Scopes: Coverage](scopes.md#coverage).
 
-### `src/flow.test.ts`: `REFERS_TO`, `READS`, `WRITES`, `FLOWS_TO`
+### `test/flow.test.ts`: `REFERS_TO`, `READS`, `WRITES`, `FLOWS_TO`
 
 There's one snippet per semantic case: the spec's numbered cases 1-21 plus 14 more. The `edges()` helper renders a case's edges as readable strings, labelling `Identifier`s as `x`, or `x:decl` for a `DECLARES` target, and other nodes as `Type(code)`. So each expectation reads like the code:
 
@@ -66,9 +66,9 @@ The `A1`-`A20` tests are an acceptance suite for the semantic layer. Each relati
 
 The spec cases already cover the rest, and the file says which test covers which item. See [References: Coverage](references.md#coverage) and [Value flow: Coverage](value-flow.md#coverage).
 
-### `src/calls.test.ts`: `CALLS`, `ARGUMENT_TO`, `RETURNS_TO`
+### `test/calls.test.ts`: `CALLS`, `ARGUMENT_TO`, `RETURNS_TO`
 
-One snippet per call-resolution rule, both resolved and deliberately unresolved, then argument mapping, return ownership, interprocedural reachability (including recursion), the two end-to-end demos, determinism, `babel` parity, persistence and consistency invariants. It uses the shared `edgeList()` and `reaches()` helpers from `src/test-utils.ts`, which the build excludes. See [Calls: Coverage](calls.md#coverage).
+One snippet per call-resolution rule, both resolved and deliberately unresolved, then argument mapping, return ownership, interprocedural reachability (including recursion), the two end-to-end demos, determinism, `babel` parity, persistence and consistency invariants. It uses the shared `edgeList()` and `reaches()` helpers from `test/test-utils.ts`, which the build excludes. See [Calls: Coverage](calls.md#coverage).
 
 ## Real bundles
 

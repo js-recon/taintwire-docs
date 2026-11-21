@@ -92,7 +92,7 @@ addFiles(files: { code: string; filename: string }[]): Promise<string[]>;
 
 Parses every file and loads them as one unit. Returns the `File` node ids, in the same order as `files`.
 
-Names still resolve per file, as with `add()`. What `addFiles()` adds is the link between files that a bundler's runtime makes. For a webpack 4 or 5 or a Turbopack build, a call or value read through the module registry resolves to the function or value in the chunk that defines it, so value paths cross chunks. Load every `.js` file of a build directory in one call. See [Bundler support](../bundlers/index.md).
+Names still resolve per file, as with `add()`. What `addFiles()` adds is the link between files that a bundler's runtime makes. For a webpack 4 or 5 or a Turbopack build, a call or value read through the module registry resolves to the function or value in the chunk that defines it, so value paths cross chunks. Classic (non-module) scripts are linked through the global scope they share on a page: a name that no scope of its own file binds resolves to another file's top-level `var`, `let`, `const` or `function` (the later file in the call's order wins, as in a browser; `window.x = …` properties aren't linked). Load every `.js` file of a build directory in one call. See [Bundler support](../bundlers/index.md).
 
 ```ts
 import { readdirSync, readFileSync } from "node:fs";
@@ -236,7 +236,7 @@ type ModuleLinks = { defines: string[]; needs: string[] };
 function moduleLinks(code: string, filename: string, parser?: Parser): ModuleLinks;
 ```
 
-Scans one file on its own. `defines` lists the bundler module ids the file registers (webpack 4/5 factories, Turbopack modules). `needs` lists the module ids it loads (`require(id)`, `import()`, `ctx.i/r/A(id)`, and a Turbopack loader's target), including ids that another file defines. It parses and flattens the file, and the graph rows are dropped once the ids are read.
+Scans one file on its own. `defines` lists the bundler module ids the file registers (webpack 4/5 factories, Turbopack modules), plus the file's own name if it has ES `import`/`export` syntax. `needs` lists the module ids it loads (`require(id)`, `import()`, `ctx.i/r/A(id)`, and a Turbopack loader's target), and the files its ES imports resolve to, including ids that another file defines. It parses and flattens the file, and the graph rows are dropped once the ids are read.
 
 ## `planUnits()`
 
@@ -244,7 +244,7 @@ Scans one file on its own. `defines` lists the bundler module ids the file regis
 function planUnits(links: Map<string, ModuleLinks>): string[][];
 ```
 
-Splits files into units that can each be loaded as their own graph. A unit is a file plus, transitively, every file that defines a module it needs. A unit contained in another one is dropped. Every file is still in a unit together with everything it loads, so value paths through the module registry stay whole. Files with no registry, such as plain ES modules (which aren't linked anyway), are one unit each. See [Memory](memory.md#one-graph-per-unit) for what this costs and what it misses.
+Splits files into units that can each be loaded as their own graph. A unit is a file plus, transitively, every file that defines a module it needs. A unit contained in another one is dropped. Every file is still in a unit together with everything it loads, so value paths through the module registry stay whole. Files that neither define nor load a module are one unit each. See [Memory](memory.md#one-graph-per-unit) for what this costs and what it misses.
 
 ```ts
 const links = new Map(files.map((f) => [f.filename, moduleLinks(f.code, f.filename)]));

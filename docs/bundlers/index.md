@@ -20,7 +20,7 @@ const graph = await PookieGraph.open();
 await graph.addFiles(files); // [{ filename, code }, ...] for every chunk
 ```
 
-Files are linked only within a single `addFiles()` call. Chunks added one at a time with `add()` stay separate graphs of names, exactly as before. There's no flag to set: taintwire recognises a bundler's runtime from the code's structure, and code with no registry is loaded exactly as with `add()`.
+Files are linked only within a single `addFiles()` call. Chunks added one at a time with `add()` stay separate graphs of names, exactly as before. There's no flag to set: taintwire recognises a bundler's runtime (or `import`/`export` syntax) from the code's structure, and code with no registry is loaded exactly as with `add()`.
 
 ## Support
 
@@ -30,4 +30,4 @@ Files are linked only within a single `addFiles()` call. Chunks added one at a t
 | [webpack 4](webpack.md) | Supported | The same, plus module arrays, `require.d(exports, "name", getter)` and `Object(ns.k)()` |
 | [Turbopack](turbopack.md) (Next.js 15.3+) | Supported | ES and CommonJS modules, `ctx.s`/`ctx.v`/`ctx.n` exports, `import()` through loader modules. Calls, arguments, returns and value reads cross chunks |
 | Rspack | Not yet | Emits a webpack-compatible runtime, so it may already work, but it hasn't been tested |
-| Vite / Rollup / esbuild | Not yet | Chunks link with real ES `import`/`export`, which taintwire doesn't resolve across files yet |
+| [Vite / Rollup / esbuild](esm.md) | Supported | Native ES-module chunks: named, default, namespace and re-exported imports, `export *`, `import()` (including Vite's preload wrapper and Rolldown's namespace objects). Calls, arguments, returns and value reads cross chunks |

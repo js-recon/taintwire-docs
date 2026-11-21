@@ -157,7 +157,7 @@ The first version walked alias chains recursively, once per callsite. That was q
 
 ## Coverage
 
-`src/calls.test.ts` has:
+`test/calls.test.ts` has:
 
 - one snippet per resolution rule (A–H in the task), and the unresolved patterns
 - argument mapping with defaults, rest, missing, extra, spread, destructured and TS `this` params, and several candidates

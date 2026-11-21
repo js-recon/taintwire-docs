@@ -125,7 +125,7 @@ Re-exports are followed, and cycles stop. Alias chains are followed iteratively,
 
 ## Builtins on the path
 
-Real sources often pass through string builtins before the sink, as in `decodeURIComponent(location.hash.slice(1))`. Taint has to go through those calls too: Chromium percent-encodes `<>` in `location.hash`, so a hash-based XSS only fires after the decode. taintwire gives `FLOWS_TO` from the input to the result for unresolved `decodeURIComponent`, `decodeURI`, `unescape`, `String` and `Object`, and from the receiver of `slice`, `substring`, `substr`, `trim*`, `toLowerCase`, `toUpperCase`, `pad*`, `repeat`, `normalize`, `replace`, `replaceAll`, `toString`, `valueOf`, `at` and `concat`. Encoders (`encodeURIComponent`, `escape`) are left out, because their output is safe in HTML. See [Value flow](../implementation/value-flow.md#builtins).
+Real sources often pass through string builtins before the sink, as in `decodeURIComponent(location.hash.slice(1))`. Taint has to go through those calls too: Chromium percent-encodes `<>` in `location.hash`, so a hash-based XSS only fires after the decode. taintwire gives `FLOWS_TO` from the input to the result for unresolved `decodeURIComponent`, `decodeURI`, `unescape`, `String` and `Object`, and from the receiver of `slice`, `substring`, `substr`, `trim*`, `toLowerCase`, `toUpperCase`, `pad*`, `repeat`, `normalize`, `replace`, `replaceAll`, `toString`, `valueOf`, `at`, `concat` and `split`, and from the receiver of `forEach`, `map`, `reduce` and the other array callback methods into the callback's element parameter. Encoders (`encodeURIComponent`, `escape`) are left out, because their output is safe in HTML. See [Value flow](../implementation/value-flow.md#builtins).
 
 ## Limitations
 

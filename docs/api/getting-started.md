@@ -7,11 +7,7 @@ title: Getting started
 
 ## Definitions
 
-- **taintwire** is the whole project: this library, which turns JavaScript into a graph and queries it.
-    - A **PookieGraph** is the graph taintwire generates from your code, saved as a single `.pg` file.
-        - A **PookieGraph Query** (pgq) is a `.pgq` file of queries you run on a PookieGraph. See [Query files (pgq)](pgq.md).
-
-Why these names? No reason at all.
+taintwire turns JavaScript into a **PookieGraph** (a `.pg` file) that you query with **PookieGraph Query** (`.pgq`) files. See [Terminology](terminology.md) for every term and file extension.
 
 ## Requirements
 

@@ -210,7 +210,7 @@ See [Value flow](../implementation/value-flow.md).
 
 ### `CALLS`
 
-`(call)-[:CALLS {candidates}]->(fn)` links a `CallExpression` or `OptionalCallExpression` to each function static analysis resolves it to: a `FunctionDeclaration`, `FunctionExpression` or `ArrowFunctionExpression` in the same file, or in another file loaded by the same [`addFiles()`](reference.md#graphaddfiles) call when the callee is an import through a webpack module registry (`(0, ns.key)()`, `Object(ns.key)()`, `require.n(ns)()()`).
+`(call)-[:CALLS {candidates}]->(fn)` links a `CallExpression` or `OptionalCallExpression` to each function static analysis resolves it to: a `FunctionDeclaration`, `FunctionExpression` or `ArrowFunctionExpression` in the same file, or in another file loaded by the same [`addFiles()`](reference.md#graphaddfiles) call when the callee is an import through a webpack module registry (`(0, ns.key)()`, `Object(ns.key)()`, `require.n(ns)()()`) or a global declared at the top level of another classic script.
 
 | Property | Type | Contents |
 | --- | --- | --- |
