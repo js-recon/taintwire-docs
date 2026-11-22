@@ -24,11 +24,11 @@ import type { PGSelector } from "@js-recon/taintwire";
 const AT = "n.file AS file, n.line AS line, n.col AS col";
 
 export const urlRead: PGSelector = {
-    cypher: {
-        query: `MATCH (n:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (n)-[:SON {key: 'object'}]->(o)
+  cypher: {
+    query: `MATCH (n:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (n)-[:SON {key: 'object'}]->(o)
 WHERE p.name IN ['hash', 'search', 'href'] AND o.name = 'location'
 RETURN n.id AS id, p.name AS kind, ${AT}`,
-    },
+  },
 };
 ```
 
@@ -40,25 +40,25 @@ import { urlRead } from "../lib/sources.pgq";
 import { htmlSinks } from "../lib/sinks.pgq";
 
 export default {
-    id: "dom_xss_url",
-    name: "DOM XSS: URL value written as HTML",
-    severity: "high",
-    message: "URL value reaches an HTML sink",
-    return: [
+  id: "dom_xss_url",
+  name: "DOM XSS: URL value written as HTML",
+  severity: "high",
+  message: "URL value reaches an HTML sink",
+  return: [
+    {
+      from: urlRead,
+      mode: "deep",
+      maxHops: 8,
+      cypher: [
+        ...htmlSinks,
         {
-            from: urlRead,
-            mode: "deep",
-            maxHops: 8,
-            cypher: [
-                ...htmlSinks,
-                {
-                    query: `MATCH (c:CallExpression)-[:SON {key: 'callee'}]->(:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (c)-[a:SON {key: 'arguments'}]->(n)
+          query: `MATCH (c:CallExpression)-[:SON {key: 'callee'}]->(:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (c)-[a:SON {key: 'arguments'}]->(n)
 WHERE p.name = 'insertAdjacentHTML' AND a.idx = 1
 RETURN n.id AS id, p.name AS kind, n.file AS file, n.line AS line, n.col AS col`,
-                },
-            ],
         },
-    ],
+      ],
+    },
+  ],
 } satisfies PGRule;
 ```
 
@@ -70,39 +70,70 @@ The taintwire-queries pack writes these fragments with short aliases instead, su
 type PGSeverity = "info" | "low" | "medium" | "high" | "critical";
 
 interface PGCypher {
-    query: string; // must RETURN id (plus file, line, col in return/from selectors); may RETURN kind
+  query: string; // must RETURN id (plus file, line, col in return/from selectors); may RETURN kind
 }
 
 interface PGSelector {
-    cypher: PGCypher | PGCypher[];
-    uses?: Record<string, PGSelector>;
-    from?: PGSelector | PGSelector[];
-    mode?: "strict" | "lenient" | "deep";
-    maxHops?: number;
+  cypher: PGCypher | PGCypher[];
+  uses?: Record<string, PGSelector>;
+  from?: PGSelector | PGSelector[];
+  mode?: "strict" | "lenient" | "deep";
+  maxHops?: number;
+  interceptors?: PGCypher[];
 }
 
 interface PGRule {
-    id: string;
-    name: string;
-    severity: PGSeverity;
-    message: string;
-    description?: string;
-    author?: string;
-    tags?: string[];
-    return: (PGSelector | PGCypher)[];
+  id: string;
+  name: string;
+  severity: PGSeverity;
+  message: string;
+  description?: string;
+  author?: string;
+  tags?: string[];
+  return: (PGSelector | PGCypher)[];
 }
 ```
 
-| Field     | Meaning                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cypher`  | The queries. A list runs every variant, concatenates the rows and drops duplicate `id`s. Lists are useful because every start pattern should be labelled: a string constant, for example, needs a `StringLiteral` variant and a `TemplateLiteral` variant.                                                                                                                                                      |
-| `uses`    | `$name` in a query is the list of `id`s of that selector's rows. This is how you chain selectors: message handlers to listener functions to `event.data` reads. If any selector in `uses` has no rows, this selector has none either, and its queries don't run.                                                                                                                                                |
-| `from`    | Keep only the rows that a value from one of these selectors flows into. Each finding then carries the `source` row and the number of `hops`.                                                                                                                                                                                                                                                                    |
-| `mode`    | How `from` flows are followed. `strict` follows `FLOWS_TO`, `ARGUMENT_TO` and `RETURNS_TO` from the source node to the sink node. `lenient` also widens both ends through up to 3 wrapping expressions, such as `location.hash.slice(1)` or `el.innerHTML = tpl(x)`. `deep` (the default) repeats `lenient` for 4 rounds, which gets past opaque calls such as `new URLSearchParams(location.search).get("q")`. |
-| `maxHops` | The longest flow kept. Defaults to 8.                                                                                                                                                                                                                                                                                                                                                                           |
-| `return`  | A rule's findings: the union of these selectors' rows, without duplicates. A bare `PGCypher` counts as a selector of one query.                                                                                                                                                                                                                                                                                 |
+| Field          | Meaning                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cypher`       | The queries. A list runs every variant, concatenates the rows and drops duplicate `id`s. Lists are useful because every start pattern should be labelled: a string constant, for example, needs a `StringLiteral` variant and a `TemplateLiteral` variant.                                                                                                                                                      |
+| `uses`         | `$name` in a query is the list of `id`s of that selector's rows. This is how you chain selectors: message handlers to listener functions to `event.data` reads. If any selector in `uses` has no rows, this selector has none either, and its queries don't run.                                                                                                                                                |
+| `from`         | Keep only the rows that a value from one of these selectors flows into. Each finding then carries the `source` row and the number of `hops`.                                                                                                                                                                                                                                                                    |
+| `mode`         | How `from` flows are followed. `strict` follows `FLOWS_TO`, `ARGUMENT_TO` and `RETURNS_TO` from the source node to the sink node. `lenient` also widens both ends through up to 3 wrapping expressions, such as `location.hash.slice(1)` or `el.innerHTML = tpl(x)`. `deep` (the default) repeats `lenient` for 4 rounds, which gets past opaque calls such as `new URLSearchParams(location.search).get("q")`. |
+| `maxHops`      | The longest flow kept. Defaults to 8.                                                                                                                                                                                                                                                                                                                                                                           |
+| `interceptors` | What could stop a value at this sink. The queries run once per finding of a selector in `return` that has `from`, and their rows go on the finding as `interceptors`. See [Interceptors](#interceptors).                                                                                                                                                                                                        |
+| `return`       | A rule's findings: the union of these selectors' rows, without duplicates. A bare `PGCypher` counts as a selector of one query.                                                                                                                                                                                                                                                                                 |
 
 Every query must `RETURN id`. A selector whose rows become findings (in `return`) or sources (in `from`) must also return `file, line, col`; one used only through `uses` can return just `id`. A missing column is a runtime error for its rule. A label with no table in the graph (an AST type that never occurs in it) gives no rows, not an error.
+
+### Interceptors
+
+An interceptor is something on the path that could stop a value from reaching the sink in a usable form: a guard condition, or a sanitizer. A sink selector lists them in `interceptors`, because they belong to that sink. Each query gets these parameters:
+
+| Parameter | Value                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------- |
+| `$sink`   | The finding's node id.                                                                             |
+| `$source` | The source node id.                                                                                |
+| `$flow`   | The source, the expressions wrapping it (as `lenient` widens a source), and every node they reach. |
+| `$found`  | The ids that the selector's earlier interceptor queries returned, in order.                        |
+
+An interceptor query must `RETURN id, file, line, col, kind, text`. Rows are deduplicated and sorted by position. `$found` lets a query build on the earlier ones: one query finds the `if` tests that read the tainted value, and a later one looks inside them for `x.indexOf("http:") > -1`. The [taintwire-queries](https://github.com/js-recon/taintwire-queries) pack's `lib/interceptors.pgq` is a full set.
+
+```ts
+export const sink: PGSelector = {
+  from: urlRead,
+  interceptors: [
+    {
+      query: `MATCH (g:IfStatement)-[:SON {key: 'consequent'}]->(br)-[:SON*0..30]->(k), (g)-[:SON {key: 'test'}]->(t)
+WHERE k.id = $sink AND EXISTS { MATCH (t)-[:SON*0..30]->(x) WHERE x.id IN $flow }
+RETURN t.id AS id, 'if' AS kind, 'must be true' AS text, t.file AS file, t.line AS line, t.col AS col`,
+    },
+  ],
+  cypher: [/* ... */],
+};
+```
+
+`$flow` follows one widening round, not the four of `deep`, so a value that passes two opaque calls before the condition isn't in it.
 
 ## Writing pgq files
 
@@ -147,7 +178,8 @@ Checks a rule, or a list of rules, that you built yourself. An empty array means
 
 - the field types and the severity
 - that queries are non-empty
-- that `maxHops` is a non-negative integer, and that `mode` and `maxHops` only appear with `from`
+- that `maxHops` is a non-negative integer, and that `mode`, `maxHops` and `interceptors` only appear with `from`
+- that an interceptor query uses no parameters other than `$sink`, `$source`, `$flow` and `$found`
 - that every `$name` in a query has an entry in `uses` (names inside strings and comments don't count)
 - that no selector depends on itself through `uses` or `from`
 - that rule ids are unique
@@ -180,6 +212,7 @@ interface PgqFinding {
     kind?: string;
     source?: { id: string; file: string; line: number; col: number; kind?: string };
     hops?: number;
+    interceptors?: { id: string; file: string; line: number; col: number; kind: string; text: string }[];
 }
 ```
 
