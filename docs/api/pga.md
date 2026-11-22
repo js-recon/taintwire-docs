@@ -19,7 +19,7 @@ import { pga } from "../lib/pga.pgq";
 // WHERE p.name = 'setItem' AND a.idx = 1 AND NOT n.type IN ['StringLiteral', 'NumericLiteral', 'NullLiteral', 'BooleanLiteral', 'RegExpLiteral']
 // RETURN n.id AS id, p.name AS kind, n.file AS file, n.line AS line, n.col AS col
 const setItem = {
-    query: `MATCH ${pga.methodCall()}, (c)${pga.arguments("a")}(n)
+  query: `MATCH ${pga.methodCall()}, (c)${pga.arguments("a")}(n)
 WHERE p.name = 'setItem' AND a.idx = 1 AND NOT n.type IN ${pga.literals}
 ${pga.ret("p.name")}`,
 };
@@ -38,15 +38,15 @@ The [sandbox](./pgq.md#sandbox) lets a `.pgq` file import only `.pgq` files insi
 
 An edge alias is named after its SON key. `(parent)${pga.callee}(child)` is `(parent)-[:SON {key: 'callee'}]->(child)`.
 
-| Alias                                                                                                                                                                 | Expands to                                    |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `pga.callee`, `pga.property`, `pga.object`, `pga.left`, `pga.right`, `pga.key`, `pga.value`, `pga.quasis`, `pga.properties`, `pga.source`, `pga.argument`, `pga.init` | `-[:SON {key: '<name>'}]->`                   |
-| `pga.arguments(v)`                                                                                                                                                    | `-[v:SON {key: 'arguments'}]->`               |
-| `pga.arguments()`                                                                                                                                                     | `-[:SON {key: 'arguments'}]->`                |
-| `pga.of.object`, `pga.of.left`, `pga.of.value`, `pga.of.id`                                                                                                           | `<-[:SON {key: '<name>'}]-` (child to parent) |
-| `pga.refersTo`                                                                                                                                                        | `-[:REFERS_TO]->` (identifier to declaration) |
-| `pga.referencedBy`                                                                                                                                                    | `<-[:REFERS_TO]-`                             |
-| `pga.flowsTo(min, max)`                                                                                                                                               | `-[:FLOWS_TO* ACYCLIC <min>..<max>]->`        |
+| Alias                                                                                                                                                                             | Expands to                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `pga.callee`, `pga.property`, `pga.object`, `pga.left`, `pga.right`, `pga.key`, `pga.value`, `pga.quasis`, `pga.properties`, `pga.source`, `pga.argument`, `pga.init`, `pga.test` | `-[:SON {key: '<name>'}]->`                   |
+| `pga.arguments(v)`                                                                                                                                                                | `-[v:SON {key: 'arguments'}]->`               |
+| `pga.arguments()`                                                                                                                                                                 | `-[:SON {key: 'arguments'}]->`                |
+| `pga.of.object`, `pga.of.left`, `pga.of.value`, `pga.of.id`                                                                                                                       | `<-[:SON {key: '<name>'}]-` (child to parent) |
+| `pga.refersTo`                                                                                                                                                                    | `-[:REFERS_TO]->` (identifier to declaration) |
+| `pga.referencedBy`                                                                                                                                                                | `<-[:REFERS_TO]-`                             |
+| `pga.flowsTo(min, max)`                                                                                                                                                           | `-[:FLOWS_TO* ACYCLIC <min>..<max>]->`        |
 
 `arguments` is a function because a query usually names the edge to test the argument's position: `(c)${pga.arguments("a")}(n) WHERE a.idx = 1`.
 
@@ -114,22 +114,22 @@ This is the `storage_url` rule before the aliases:
 
 ```ts
 export const sink: PGSelector = {
-    from: urlReadNoHref,
-    mode: "deep",
-    maxHops: 8,
-    cypher: [
-        {
-            query: `MATCH (a:AssignmentExpression)-[:SON {key: 'left'}]->(l:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (l)-[:SON {key: 'object'}]->(o:Identifier), (a)-[:SON {key: 'right'}]->(n)
+  from: urlReadNoHref,
+  mode: "deep",
+  maxHops: 8,
+  cypher: [
+    {
+      query: `MATCH (a:AssignmentExpression)-[:SON {key: 'left'}]->(l:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (l)-[:SON {key: 'object'}]->(o:Identifier), (a)-[:SON {key: 'right'}]->(n)
 WHERE p.name = 'cookie' AND o.name = 'document' AND NOT n.type IN ['StringLiteral', 'NumericLiteral', 'NullLiteral', 'BooleanLiteral']
 RETURN n.id AS id, 'cookie' AS kind, n.file AS file, n.line AS line, n.col AS col`,
-        },
-        {
-            query: `MATCH (c:CallExpression)-[:SON {key: 'callee'}]->(cm:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (c)-[a:SON {key: 'arguments'}]->(n), (cm)-[:SON {key: 'object'}]->(o)
+    },
+    {
+      query: `MATCH (c:CallExpression)-[:SON {key: 'callee'}]->(cm:MemberExpression)-[:SON {key: 'property'}]->(p:Identifier), (c)-[a:SON {key: 'arguments'}]->(n), (cm)-[:SON {key: 'object'}]->(o)
 WHERE p.name = 'setItem' AND a.idx = 1 AND NOT n.type IN ['StringLiteral', 'NumericLiteral', 'NullLiteral', 'BooleanLiteral']
   AND (o.name IN ['localStorage', 'sessionStorage'] OR EXISTS { MATCH (o)-[:SON {key: 'property'}]->(q:Identifier) WHERE q.name IN ['localStorage', 'sessionStorage'] })
 RETURN n.id AS id, 'setItem' AS kind, n.file AS file, n.line AS line, n.col AS col`,
-        },
-    ],
+    },
+  ],
 };
 ```
 
@@ -137,17 +137,17 @@ Three other rules carried the same two queries. Now `lib/sinks.pgq` holds them o
 
 ```ts
 export const storageSinks: PGCypher[] = [
-    {
-        query: `MATCH (a:AssignmentExpression)${pga.left}(l:MemberExpression)${pga.property}(p:Identifier), (l)${pga.object}(o:Identifier), (a)${pga.right}(n)
+  {
+    query: `MATCH (a:AssignmentExpression)${pga.left}(l:MemberExpression)${pga.property}(p:Identifier), (l)${pga.object}(o:Identifier), (a)${pga.right}(n)
 WHERE p.name = 'cookie' AND o.name = 'document' AND NOT n.type IN ${pga.literalsNoRegExp}
 ${pga.ret("'cookie'")}`,
-    },
-    {
-        query: `MATCH ${pga.methodCall()}, (c)${pga.arguments("a")}(n), (cm)${pga.object}(o)
+  },
+  {
+    query: `MATCH ${pga.methodCall()}, (c)${pga.arguments("a")}(n), (cm)${pga.object}(o)
 WHERE p.name = 'setItem' AND a.idx = 1 AND NOT n.type IN ${pga.literalsNoRegExp}
   AND ${pga.named("o", ["localStorage", "sessionStorage"])}
 ${pga.ret("'setItem'")}`,
-    },
+  },
 ];
 ```
 
@@ -158,10 +158,10 @@ import { urlReadNoHref } from "../lib/sources.pgq";
 import { storageSinks } from "../lib/sinks.pgq";
 
 export const sink: PGSelector = {
-    from: urlReadNoHref,
-    mode: "deep",
-    maxHops: 8,
-    cypher: storageSinks,
+  from: urlReadNoHref,
+  mode: "deep",
+  maxHops: 8,
+  cypher: storageSinks,
 };
 ```
 
