@@ -204,6 +204,7 @@ Identifier y (decl) ─> Identifier y (use) ─┘
 
 - A variable's declaration `Identifier` is the summary for its value: every write flows into it, and it flows out to every read. This is flow-insensitive, so order isn't tracked and cycles are normal (`x = x + 1`).
 - Values flow through binary, logical, unary (not `void` or `delete`), conditional (branches only), template, sequence (last only), assignment and update expressions, and into `ReturnStatement`.
+- An assignment to a name that no file declares (sloppy-mode `x = v`, common in inline event handlers) creates a page global. `v` flows straight to every read of `x` that nothing declares, in any scope and in any file of the same [`addFiles()`](reference.md#graphaddfiles) call. These reads get no `REFERS_TO`, so they still count as globals. Assigning an existing window property (`location`, `name`, `status`, `on*` handlers, …) doesn't count, since that sets the host property.
 - No flow through member access, destructuring, iteration, object and array literals, or unresolved calls yet. Resolved calls continue through `ARGUMENT_TO` and `RETURNS_TO`. The exceptions are a member read on a bundler module namespace (`ns.key`), which gets `FLOWS_TO` from the exported value (see [`EXPORTS`](#exports)), and unresolved [builtins](../implementation/value-flow.md#builtins) such as `decodeURIComponent(x)` and `x.slice(1)`, which get `FLOWS_TO` from their input.
 
 See [Value flow](../implementation/value-flow.md).
